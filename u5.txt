@@ -1,0 +1,107 @@
+#P5 - Mean Shift
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+#--------------------------
+# 1) Small 2D Dataser (3 blob)
+#-----------------------------
+rng = np.random.default_rng(7)
+X = np.vstack([
+    rng.normal([-2.5, 0.0], 0.55, size=(120, 2)),
+    rng.normal([0.5, 2.5 ], 0.60, size=(120, 2)),
+    rng.normal([2.8, -0.8], 0.50, size=(120, 2))
+])
+
+plt.figure()
+plt.scatter(X[:, 0], X[:, 1], s=18)
+plt.title("Dataset")
+plt.xlabel("x1")
+plt.ylabel("x2")
+plt.show()
+
+
+#-------------------------
+# 2) Mean Shift (Gaussian)
+#-------------------------
+def mean_shift_point(x0, X, h=1.0, max_iter=40, eps=1e-3):
+  x = x0.copy()
+  path = [x.copy()]
+  for _ in range(max_iter):
+    d2 = np.sum((X - x)**2, axis=1)      #Squared diatnace to all points
+    w = np.exp(-d2 / (2 * h * h))         #Gaussian weights
+    x_new = (w[:, None] * X).sum(axis=0) / (w.sum() + 1e-12)  #weighted mean
+    path.append(x_new.copy())
+    if np.linalg.norm(x_new - x) < eps:
+      break
+    x = x_new
+  return x, np.array(path)
+
+
+#-------------------------
+# 3) Bandwidth selection (fixed)
+#    Median pairwisw distance on subset
+#-------------------------
+m = 120
+idx = rng.choice(len(X), size=m, replace=False)
+Xs = X[idx, :]                                     #FIX: correct 2D indexing
+
+#pairwise distance: shape (m,m)
+D2 = np.sum((Xs[:, None, :] - Xs[None, :, :])**2, axis=2)
+D = np.sqrt(D2 + 1e-12)
+
+h = 0.85 * np.median(D[np.triu_indices_from(D, 1)])    #median of upper triangle
+h = float(np.clip(h, 0.6, 1.2))
+
+
+# ------------------------------------
+# 4) Run mean shift for all points
+# ------------------------------------
+modes = np.zeros_like(X)
+for i in range(len(X)):
+    modes[i], _ = mean_shift_point(X[i], X, h=h)
+
+
+# ------------------------------------
+# 5) Merge nearby modes -> clusters
+# ------------------------------------
+merge_r = 0.5 * h
+centers = []
+for m0 in modes:
+    if len(centers) == 0:
+        centers.append(m0)
+        continue
+    if np.min(np.linalg.norm(np.array(centers) - m0, axis=1)) > merge_r:
+        centers.append(m0)
+
+centers = np.array(centers)
+
+labels = np.argmin(np.linalg.norm(modes[:, None, :] - centers[None, :, :], axis=2), axis=1)
+
+plt.figure()
+plt.scatter(X[:, 0], X[:, 1], s=18, c=labels)
+plt.scatter(centers[:, 0], centers[:, 1], marker="x", s=140)
+plt.title(f"Mean Shift Clustering (h={h:.2f}, clusters={len(centers)})")
+plt.xlabel("x1"); plt.ylabel("x2")
+plt.show()
+
+
+# ------------------------------------
+# # 6) Intermediate trajectories (few points)
+# ------------------------------------
+pick = rng.choice(len(X), size=5, replace=False)
+
+plt.figure()
+plt.scatter(X[:, 0], X[:, 1], s=12, alpha=0.35)
+for i in pick:
+    _, path = mean_shift_point(X[i], X, h=h)
+    plt.plot(path[:, 0], path[:, 1], linewidth=2)
+    plt.scatter(path[0, 0], path[0, 1], s=40)                 # start
+    plt.scatter(path[-1, 0], path[-1, 1], s=70, marker="x")    # end
+plt.title("Mean Shift trajectories (intermediate steps)")
+plt.xlabel("x1"); plt.ylabel("x2")
+plt.show()
+
+print(f"h={h:.3f}, merge_r={merge_r:.3f}, clusters={len(centers)}")
+print("Cluster centers:\n", centers)
+

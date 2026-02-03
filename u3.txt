@@ -1,0 +1,241 @@
+#P3 - DBSCAN
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
+
+#Dataset
+data = np.array([
+    [15, 2], [16, 3], [15.5, 2.5], [18, 4],
+    [50, 40], [51, 42], [49, 39],
+    [12, 2],
+    [80, 100], [82, 98], [81, 101], [85, 90]
+])
+
+#Standardize the data for better clustering performance
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(data)
+
+#Apply DBSCAN
+eps = .5
+min_samples = 3
+dbscan= DBSCAN(eps=eps, min_samples=min_samples)
+labels = dbscan.fit_predict(scaled_data)
+
+#Add cluster Labels to the data
+df = pd.DataFrame(data, columns=["Annual Spending", "Shopping Frequency"]) 
+df [ "Cluster"] = labels
+
+# Identify Core, Border, and Noise Points
+core_samples_mask= np. zeros_like(labels, dtype=bool)
+core_samples_mask [dbscan.core_sample_indices_] = True
+
+df [ "Type"] = ["Core" if core_samples_mask [i] else "Border" if labels[i] != -1 else "Noise" for i in range(len(labels))]
+
+# Print the resulting table 
+print("DBSCAN Results: ") 
+print(df)
+
+# Visualization
+plt.figure(figsize=(10, 8))
+unique_labels = np.unique(labels)
+
+# Plot each cluster with distinct colors
+for label in unique_labels:
+    cluster_points = df[df["Cluster"] == label]
+    if label == -1:  # Nois e points
+        color = 'red'
+    else:
+        color = plt.cm.Set1(label / max(unique_labels))  # Unique color for each cluster
+
+    plt.scatter(
+        cluster_points["Annual Spending"],
+        cluster_points["Shopping Frequency"],
+        label=f"Cluster {label}" if label != -1 else "Noise",
+        color=color,
+        s=100,
+        edgecolor="black"
+    )
+
+# Annotate core, border, and noise points
+for i, row in df.iterrows():
+    plt.text(
+        row["Annual Spending"] + 0.5,
+        row["Shopping Frequency"],
+        f"{row['Type']}",
+        fontsize=8
+    )
+
+# Add labels and legend
+plt.title("DBSCAN Clustering with Core, Border, and Noise Points")
+plt.xlabel("Annual Spending ($1000s)")
+plt.ylabel("Shopping Frequency (times/year)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+### 2. Identifying Clusters, Core, Border, and Noise Points Using DBSCAN
+# importing necessary libraries after reset
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
+
+# Updated dataset to include core, border, and noise points
+data = np.array([
+    [1.0, 1.0], [2.0, 1.0], [2.0, 2.0], [3.0, 2.0],     # Cluster 0 (includes a border point)
+    [10.0, 10.0], [10.5, 10.0], [10.5, 12.5], [11.0, 10.5],  # Cluster 1 (includes a border point)
+    [20.0, 20.0]  # Noise
+])
+
+# Standardize the data
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(data)
+
+# Apply DBSCAN
+eps = 0.2
+min_samples = 3
+dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+labels = dbscan.fit_predict(scaled_data)
+
+#Add cluster Labels to the data
+df = pd.DataFrame(data, columns=["Annual Spending", "Shopping Frequency"]) 
+df [ "Cluster"] = labels
+
+# Identify Core, Border, and Noise Points
+core_samples_mask= np. zeros_like(labels, dtype=bool)
+core_samples_mask [dbscan.core_sample_indices_] = True
+
+df [ "Type"] = ["Core" if core_samples_mask [i] else "Border" if labels[i] != -1 else "Noise" for i in range(len(labels))]
+
+# Print the resulting table 
+print("DBSCAN Results: ") 
+print(df)
+
+# Visualization
+plt.figure(figsize=(10, 8))
+unique_labels = np.unique(labels)
+
+# Plot each cluster with distinct colors
+for label in unique_labels:
+    cluster_points = df[df["Cluster"] == label]
+    if label == -1:  # Noise points
+        color = 'red'
+    else:
+        color = plt.cm.Set1(label / max(unique_labels))  # Unique color for each cluster
+
+    plt.scatter(
+        cluster_points["Annual Spending"],
+        cluster_points["Shopping Frequency"],
+        label=f"Cluster {label}" if label != -1 else "Noise",
+        color=color,
+        s=100,
+        edgecolor="black"
+    )
+
+# Annotate core, border, and noise points
+for i, row in df.iterrows():
+    plt.text(
+        row["Annual Spending"] + 0.5,
+        row["Shopping Frequency"],
+        f"{row['Type']}",
+        fontsize=8
+    )
+
+# Add labels and legend
+plt.title("DBSCAN Clustering with Core, Border, and Noise Points")
+plt.xlabel("Annual Spending ($1000s)")
+plt.ylabel("Shopping Frequency (times/year)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+### 3. Identifying Clusters, Core, Border, and Noise Points Using DBSCAN using IRIS dataset
+
+# importing necessary libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import load_iris
+
+# Load Iris dataset
+iris = load_iris()
+X = iris.data[:, :2]  # Use sepal length & sepal width for 2D visualization
+
+# Create DataFrame
+df = pd.DataFrame(X, columns=["Sepal Length", "Sepal Width"])
+
+# Standardize the data
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(X)
+
+# Apply DBSCAN
+eps = 0.4
+min_samples = 5
+dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+labels = dbscan.fit_predict(scaled_data)
+
+# Add cluster labels
+df["Cluster"] = labels
+
+# Identify Core, Border, and Noise Points
+core_samples_mask = np.zeros_like(labels, dtype=bool)
+core_samples_mask[dbscan.core_sample_indices_] = True
+
+df["Type"] = [
+    "Core" if core_samples_mask[i] 
+    else "Border" if labels[i] != -1 
+    else "Noise"
+    for i in range(len(labels))
+]
+
+# Print results
+print("DBSCAN Results:")
+print(df.head())
+
+# Visualization
+plt.figure(figsize=(10, 8))
+unique_labels = np.unique(labels)
+
+# Plot each cluster with distinct colors
+for label in unique_labels:
+    cluster_points = df[df["Cluster"] == label]
+    if label == -1:
+        color = "red"
+    else:
+        color = plt.cm.Set1(label / max(unique_labels))
+
+    plt.scatter(
+        cluster_points["Sepal Length"],
+        cluster_points["Sepal Width"],
+        label=f"Cluster {label}" if label != -1 else "Noise",
+        color=color,
+        s=80,
+        edgecolor="black"
+    )
+
+# Annotate core, border, and noise points
+for _, row in df.iterrows():
+    plt.text(
+        row["Sepal Length"] + 0.02,
+        row["Sepal Width"],
+        row["Type"][0],  # C, B, or N for clarity
+        fontsize=7
+    )
+
+# Add labels and legend
+plt.title("DBSCAN on Iris Dataset (Core, Border, Noise Points)")
+plt.xlabel("Sepal Length (cm)")
+plt.ylabel("Sepal Width (cm)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+

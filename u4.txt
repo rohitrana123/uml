@@ -1,0 +1,62 @@
+#P4 - Gaussain 
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.mixture import GaussianMixture
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+from scipy.stats import norm
+
+#Generate synthetic dataset
+n_samples = 500
+X, y_true = make_blobs(n_samples=n_samples, centers=3, cluster_std=[1.0, 0.5, 2.5], random_state=42)
+
+#Apply KMeans clusttering
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+y_kmeans = kmeans.fit_predict(X)
+
+#Apply Gaussian Mixture Model Clustering
+gmm = GaussianMixture(n_components=3, covariance_type='full', random_state=42)
+gmm.fit(X)
+y_gmm = gmm.predict(X)
+
+# Visualize KMeans Clustering
+plt.figure(figsize=(12, 5))
+plt.subplot(1,2,1)
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, cmap='viridis', s=30, edgecolor='k')
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], c='red', marker='X', s=200, label='Centroids')
+plt.title("K-Means Clustering")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+plt.legend()
+plt.show()
+
+# Visualize Gaussian Mixture Model Clustering
+plt.figure(figsize=(12, 5))
+plt.subplot(1,2,2)
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, cmap='viridis', s=30, edgecolor='k')
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], c='red', marker='X', s=200, label='GMM Centers')
+plt.title("Gaussian Mixture Model Clustering")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+plt.legend()
+plt.show()
+
+#Plot Gaussian Curves for each component based on the first feature
+fig, ax = plt.subplots(figsize=(10, 6))
+x_range = np.linspace(X[:, 0].min() - 1, X[:, 0].max() + 1, 200)
+
+for i in range(gmm.n_components):
+    mean = gmm.means_[i][0]  #Using first feature mean
+    std_dev = np.sqrt(gmm.covariances_[i][0, 0]) #Using Variance to compute std dev
+
+    #Compute Gaussian probability density function
+    y_gaussian = norm.pdf(x_range, mean, std_dev)
+
+    ax.plot(x_range, y_gaussian, label=f"Gaussian {i+1} (μ={mean:.2f}, σ={std_dev:.2f})")
+
+ax.set_title("Gaussian Distributions of GMM Components (Feature 1)")
+ax.set_xlabel("Feature 1 Values")
+ax.set_ylabel("Probability Density")
+ax.legend()
+plt.show()
