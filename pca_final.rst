@@ -1,8 +1,6 @@
-.. code:: ipython3
+
 
     # PCA
-
-.. code:: ipython3
 
     # Step 1: Import required libraries
     # ---------------------------------------------------------------------
