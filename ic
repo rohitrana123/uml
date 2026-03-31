@@ -1,0 +1,97 @@
+# Step 1: Import required libraries
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import FastICA
+
+
+# Step 2: Generate source signals
+np.random.seed(0)
+n_samples = 1000
+time = np.linspace(0, 8, n_samples)
+
+# Define signals
+s1 = np.sin(2 * time)
+s2 = np.sign(np.sin(3 * time))
+s3 = np.random.normal(size=n_samples)
+
+# Combine into matrix
+S = np.c_[s1, s2, s3]
+
+# Standardize
+S = S / S.std(axis=0)
+
+
+# Step 3: Plot original source signals
+plt.figure(figsize=(9, 8))
+
+for i in range(3):
+    plt.subplot(3,1,i+1)
+    plt.plot(time, S[:, i])
+    plt.title(f"Original Signal {i+1}")
+    plt.grid()
+
+plt.tight_layout()
+plt.show()
+
+
+# Step 4: Define mixing matrix and create mixed signals
+A = np.array([
+    [1.0, 1.0, 0.5],
+    [0.5, 2.0, 1.0],
+    [1.5, 1.0, 2.0]
+])
+
+X = np.dot(S, A.T)
+
+
+# Step 5: Plot mixed signals
+plt.figure(figsize=(9, 8))
+
+for i in range(3):
+    plt.subplot(3,1,i+1)
+    plt.plot(X[:, i])
+    plt.title(f"Mixed Signal {i+1}")
+    plt.grid()
+
+plt.tight_layout()
+plt.show()
+
+
+# Step 6: Apply ICA
+ica = FastICA(n_components=3, random_state=42)
+
+S_est = ica.fit_transform(X)   # recovered signals
+A_est = ica.mixing_
+
+print("Recovered shape:", S_est.shape)
+print("Mixing matrix shape:", A_est.shape)
+
+
+# Step 7: Plot recovered signals
+plt.figure(figsize=(9, 8))
+
+for i in range(3):
+    plt.subplot(3,1,i+1)
+    plt.plot(S_est[:, i])
+    plt.title(f"Recovered Signal {i+1}")
+    plt.grid()
+
+plt.tight_layout()
+plt.show()
+
+
+# Step 8: Compare original vs recovered signals
+plt.figure(figsize=(10, 8))
+
+for i in range(3):
+    plt.subplot(3,1,i+1)
+    
+    plt.plot(S[:, i], label="Original")
+    plt.plot(S_est[:, i], '--', label="Recovered")
+    
+    plt.title(f"Signal {i+1}: Original vs Recovered")
+    plt.legend()
+    plt.grid()
+
+plt.tight_layout()
+plt.show()
